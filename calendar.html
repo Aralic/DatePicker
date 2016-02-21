@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style type="text/css">
+        .disabled {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script id="tpl" type="text/html">
+<div class="calendar">
+    <div class="action-btn">
+        <a href="javascript:;" class="prev" data-action="prev">上个月</a>
+        <a href="javascript:;" class="next" data-action="next">下个月</a>
+    </div>
+
+    <h2 class="calendar-title"><%=title%></h2>
+    <table>
+        <tr>
+            <th>星期日</th>
+            <th>星期一</th>
+            <th>星期二</th>
+            <th>星期三</th>
+            <th>星期四</th>
+            <th>星期五</th>
+            <th>星期六</th>
+        </tr>
+        <%for(var i=0;i<dataList.length;i++){%>
+            <%if(i%7 === 0){%>
+                <tr>
+            <%}%>
+            <td class="<%if(dataList[i]['disabled']){%> disabled<%}%>">
+                <%=dataList[i]['content']%>
+            </td>
+            <%if(i%7 === 6){%>
+                </tr>
+            <%}%>
+        <%}%>
+    </table>
+</div>
+</script>
+    <script type="text/javascript" src="template.js"></script>
+    <script type="text/javascript" src="calendar.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+</body>
+</html>
