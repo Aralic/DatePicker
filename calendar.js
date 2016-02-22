@@ -51,22 +51,23 @@ function getWeekCount(date) {
     return Math.ceil(count / 7);
 }
 
-function Calendar(options) {
-    this.container = document.querySelector(options.container);
+function DatePicker(options) {
+    this.host = document.querySelector(options.host);
+    this.oncheck = options.oncheck || '';
     this.init();
 }
 
-Calendar.prototype.init = function() {
+DatePicker.prototype.init = function() {
     var showDate = new Date();
     this.preComplie(showDate);
 };
 
-Calendar.prototype.preComplie = function(showDate) {
+DatePicker.prototype.preComplie = function(showDate) {
     this.updateShowData(showDate);
     this.complie(showDate);
 };
 
-Calendar.prototype.updateShowData = function(showDate) {
+DatePicker.prototype.updateShowData = function(showDate) {
     this.showYear = showDate.getFullYear();
     this.showMonth = showDate.getMonth() + 1;
 };
@@ -75,11 +76,11 @@ Calendar.prototype.updateShowData = function(showDate) {
  * @param  {String} direction next下个月 prev上个月
  * @return {[type]}           [description]
  */
-Calendar.prototype.change = function(direction) {
+DatePicker.prototype.change = function(direction) {
 
 };
 
-Calendar.prototype.complie = function(showDate) {
+DatePicker.prototype.complie = function(showDate) {
 
     var day = showDate.getDay();
     var dayLen = getDayCount(showDate);
@@ -87,6 +88,7 @@ Calendar.prototype.complie = function(showDate) {
     var title = this.showYear + '年' + this.showMonth + '月';
     // 一个月的第一天是星期几？
     var arr = [];
+    var disabled = false;
     for (var i = 0; i < 42; i++) {
         if (i < firstDay || i >= (dayLen+firstDay)) {
             arr.push({
@@ -95,25 +97,28 @@ Calendar.prototype.complie = function(showDate) {
             });
         }
         else {
+            // day%7 得到当前天所属星期几 从0星期天开始
+            disabled = this.oncheck(day%7);
+            day++;
             arr.push({
                 content: i - firstDay + 1,
-                disabled: false
+                disabled: disabled
             });
         }
     }
     this.render({dataList: arr, title: title});
 };
 
-Calendar.prototype.render = function(data) {
+DatePicker.prototype.render = function(data) {
     var tpl = document.getElementById('tpl').innerHTML;
     var html = baidu.template(tpl, data);
-    this.container.innerHTML = html;
+    this.host.innerHTML = html;
     this.bindEvent();
 };
 
-Calendar.prototype.bindEvent = function() {
+DatePicker.prototype.bindEvent = function() {
     var _this = this;
-    this.container.querySelector('.action-btn').addEventListener('click', function(e) {
+    this.host.querySelector('.action-btn').addEventListener('click', function(e) {
         var target = e.target || e.srcElement;
         var action = target.dataset.action;
         if (target.nodeName.toLowerCase() !== 'a') return;
