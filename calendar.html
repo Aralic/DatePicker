@@ -33,7 +33,7 @@
             <%if(i%7 === 0){%>
                 <tr>
             <%}%>
-            <td class="<%if(dataList[i]['disabled']){%> disabled<%}%>">
+            <td class="<%if(dataList[i]['disabled']){%> disabled<%}%>" data-value="<%if(dataList[i]['value']){%><%=dataList[i]['value']%><%}%>">
                 <%=dataList[i]['content']%>
             </td>
             <%if(i%7 === 6){%>

@@ -1,4 +1,5 @@
 
+var slice = Array.prototype.slice;
 /**
  * 格式化时间对象
  * @param  {Object} date 时间对象
@@ -53,7 +54,8 @@ function getWeekCount(date) {
 
 function DatePicker(options) {
     this.host = document.querySelector(options.host);
-    this.oncheck = options.oncheck || '';
+    this.oncheck = options.oncheck || function() {};
+    this.onselected = options.onselected || function() {};
     this.init();
 }
 
@@ -102,7 +104,8 @@ DatePicker.prototype.complie = function(showDate) {
             day++;
             arr.push({
                 content: i - firstDay + 1,
-                disabled: disabled
+                disabled: disabled,
+                value: this.showYear + '-' + this.showMonth + '-' + (i - firstDay + 1)
             });
         }
     }
@@ -131,7 +134,15 @@ DatePicker.prototype.bindEvent = function() {
         _this.preComplie(new Date(_this.showYear, _this.showMonth-1));
 
     }, false);
+
+    this.host.querySelector('.calendar table').addEventListener('click', function(e) {
+        var target = e.target || e.srcElement;
+        if (target.nodeName.toLowerCase() === 'table') return false;
+        while(target.nodeName.toLowerCase() !== 'td') {
+            target = target.parentNode;
+        }
+        if (slice.call(target.classList, 0).indexOf('disabled') > -1) return;
+        _this.onselected(new Date(target.dataset.value));
+    }, false);
 };
-
-
 
