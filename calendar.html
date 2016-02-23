@@ -21,13 +21,9 @@
     <h2 class="calendar-title"><%=title%></h2>
     <table>
         <tr>
-            <th>星期日</th>
-            <th>星期一</th>
-            <th>星期二</th>
-            <th>星期三</th>
-            <th>星期四</th>
-            <th>星期五</th>
-            <th>星期六</th>
+            <%for(var i=0; i<weekName.length; i++){%>
+                <td><%=weekName[i]%></td>
+            <%}%>
         </tr>
         <%for(var i=0;i<dataList.length;i++){%>
             <%if(i%7 === 0){%>

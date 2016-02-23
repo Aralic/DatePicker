@@ -19,8 +19,15 @@ function formatDate(date, str) {
     else if (str === 'YYYY-MM') {
         return year + '-' + month;
     }
-    else {
+    else if (str === 'YYYY-MM-SS') {
         return year + '-' + month + '-' + day;
+    }
+    else {
+        return {
+            year: year,
+            month: parseInt(month, 10),
+            day: parseInt(day, 10)
+        }
     }
 }
 
@@ -52,15 +59,50 @@ function getWeekCount(date) {
     return Math.ceil(count / 7);
 }
 
+/**
+ * 检查是否是时间对象。如果不是则转换成时间对象
+ * @param  {String|Date Object} args 
+ * @return {[type]}      时间对象
+ */
+function transDate(args) {
+    if (args && typeof args === 'string') {
+        return new Date(args);
+    }
+    else if (args) {
+        return args;
+    }
+    else {
+        return new Date();
+    } 
+}
+
+
 function DatePicker(options) {
-    this.host = document.querySelector(options.host);
-    this.oncheck = options.oncheck || function() {};
-    this.onselected = options.onselected || function() {};
+    this.config = {
+        weekName: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+    }
+    this.checkArgs(options);
     this.init();
 }
 
+DatePicker.prototype.checkArgs = function(options) {
+    this.host = document.querySelector(options.host);
+    this.filter = options.filter || function() {};
+    this.onselected = options.onselected || function() {};
+    // 星期名称
+    this.weekName = options.weekName || this.config.weekName;
+    // 今天是否可选
+    this.isTodayValid = options.isTodayValid || true;
+    // 用户选择的开始日期
+    this.startDate = transDate(options.startDate);
+    // 结束日期默认为空
+    this.endDate = transDate(options.endDate).getTime() !== new Date().getTime() ? transDate(options.endDate) : null;
+
+};
+
 DatePicker.prototype.init = function() {
-    var showDate = new Date();
+    var showDate = this.startDate;
+    this.settingDate = showDate.getDate();
     this.preComplie(showDate);
 };
 
@@ -70,8 +112,10 @@ DatePicker.prototype.preComplie = function(showDate) {
 };
 
 DatePicker.prototype.updateShowData = function(showDate) {
+    // 起始年月日
     this.showYear = showDate.getFullYear();
     this.showMonth = showDate.getMonth() + 1;
+    this.showDate = showDate.getDate();
 };
 /**
  * 改变月份的方向
@@ -83,33 +127,69 @@ DatePicker.prototype.change = function(direction) {
 };
 
 DatePicker.prototype.complie = function(showDate) {
-
-    var day = showDate.getDay();
+    // 一个月的第一天是星期几？
+    var day = new Date(this.showYear, this.showMonth-1).getDay();
     var dayLen = getDayCount(showDate);
     var firstDay = getMonthFirstDay(showDate);
     var title = this.showYear + '年' + this.showMonth + '月';
-    // 一个月的第一天是星期几？
+    var length = Math.ceil((firstDay+dayLen)/7) * 7;
     var arr = [];
+    var content = '';
     var disabled = false;
-    for (var i = 0; i < 42; i++) {
-        if (i < firstDay || i >= (dayLen+firstDay)) {
-            arr.push({
-                content: '',
-                disabled: true
-            });
+    var value = '';
+    var startDate = formatDate(this.startDate);
+    var endDate = this.endDate ? formatDate(this.endDate) : null;
+    for (var i = 0; i < length; i++) {
+        if (i < firstDay || i >= (dayLen + firstDay)) {
+            content = '';
+            disabled = true;
+            value = '';
         }
         else {
-            // day%7 得到当前天所属星期几 从0星期天开始
-            disabled = this.oncheck(day%7);
-            day++;
-            arr.push({
-                content: i - firstDay + 1,
-                disabled: disabled,
-                value: this.showYear + '-' + this.showMonth + '-' + (i - firstDay + 1)
-            });
+            value = this.showYear + '-' + this.showMonth + '-' + (i - firstDay + 1);
+            content = i - firstDay + 1;
+            disabled = false;
+            //day%7 得到当前天所属星期几 从0星期天开始
+            // 当前展示年月小于起始年月
+            if (startDate.year > this.showYear
+                || this.showYear > endDate.year
+                || (startDate.year === this.showYear && startDate.month > this.showMonth)
+                || (endDate.year === this.showYear && this.showMonth > endDate.month)) {
+                
+                disabled = true;
+                
+            }
+            // 当前展示日小于起始日
+            else if (startDate.year === this.showYear
+                && startDate.month === this.showMonth
+                && (i - firstDay + 1) <= startDate.day) {
+                day++;
+                if (this.isTodayValid && (i - firstDay + 1) === this.settingDate) {                    
+                    disabled = false;
+                }
+                else {
+                    disabled = true;
+                }
+            }
+            else if (endDate.year === this.showYear
+                && endDate.month === this.showMonth
+                && endDate.day < (i - firstDay + 1)) {
+                disabled = true;
+            }
+            else {
+                disabled = this.filter(day%7);    
+                day++;
+            }
         }
+
+        arr.push({
+            content: content,
+            value: value,
+            disabled: disabled
+        });
     }
-    this.render({dataList: arr, title: title});
+
+    this.render({dataList: arr, title: title, weekName: this.weekName});
 };
 
 DatePicker.prototype.render = function(data) {
